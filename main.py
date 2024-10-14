@@ -12,6 +12,9 @@ import glass
 import utils
 
 
+LOGGER = logging.getLogger(__name__)
+
+
 @click.group(chain=True)
 @click.option("--results_path", type=str, default="results")
 @click.option("--gpu", type=int, default=[0], multiple=True, show_default=True)
@@ -117,8 +120,8 @@ def net(
 
 @main.command("dataset")
 @click.argument("name", type=str)
-@click.argument("data_path", type=click.Path(exists=True, file_okay=False))
-@click.argument("aug_path", type=click.Path(exists=True, file_okay=False))
+@click.argument("data_path", type=click.Path(file_okay=False))
+@click.argument("aug_path", type=click.Path(file_okay=False))
 @click.option("--subdatasets", "-d", multiple=True, type=str, required=True)
 @click.option("--batch_size", default=8, type=int, show_default=True)
 @click.option("--num_workers", default=16, type=int, show_default=True)
@@ -346,6 +349,5 @@ def run(
 if __name__ == "__main__":
     warnings.filterwarnings('ignore')
     logging.basicConfig(level=logging.INFO)
-    LOGGER = logging.getLogger(__name__)
     LOGGER.info("Command line arguments: {}".format(" ".join(sys.argv)))
     main()
