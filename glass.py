@@ -352,6 +352,7 @@ class GLASS(torch.nn.Module):
             dist_t = torch.norm(true_points - c_t_points, dim=1)
             r_t = torch.tensor([torch.quantile(dist_t, q=self.radius)]).to(self.device)
 
+            # This loop here is GAS under the manifold hypothesis (Algorithm 1)
             for step in range(self.step + 1):
                 scores = self.discriminator(torch.cat([true_feats, gaus_feats]))
                 true_scores = scores[:len(true_feats)]
@@ -375,6 +376,12 @@ class GLASS(torch.nn.Module):
                 with torch.no_grad():
                     gaus_feats.add_(0.001 * grad_normalized)
 
+                # This is the "truncated projection". Btw., I think this is a slight
+                # error here, because step goes to [0,20], so that if step==19, this
+                # `if` will be `True` and the truncated projection will be applied.
+                # However, there will be one additional step after this, so the final
+                # projection will *not* be necessarily truncated!
+                # UPDATE: I just noticed the `if step == self.step` that will break!
                 if (step + 1) % 5 == 0:
                     dist_g = torch.norm(gaus_feats - center, dim=1)
                     r_g = torch.tensor([torch.quantile(dist_g, q=self.radius)]).to(self.device)
@@ -388,6 +395,10 @@ class GLASS(torch.nn.Module):
                     h = proj * h
                     gaus_feats = proj_feats + h
 
+            # Note that the optimizers have not yet been updated. However, Algorithm 1
+            # did initialize and update `bce_loss`, which is used three blocks down to
+            # make a step in both the optimizers for the adaptor (projection) and the
+            # discriminator!
             fake_points = fake_feats[mask_s_gt[:, 0] == 1]
             true_points = true_feats[mask_s_gt[:, 0] == 1]
             c_f_points = center[mask_s_gt[:, 0] == 1]
@@ -405,6 +416,8 @@ class GLASS(torch.nn.Module):
                 fake_points = proj_feats + h
                 fake_feats[mask_s_gt[:, 0] == 1] = fake_points
 
+            # Here starts the LAS-branch.
+            # `fake_scores` is the augmented images for LAS.
             fake_scores = self.discriminator(fake_feats)
             if self.p > 0:
                 fake_dist = (fake_scores - mask_s_gt) ** 2
@@ -419,6 +432,8 @@ class GLASS(torch.nn.Module):
 
             loss = bce_loss + focal_loss
             loss.backward()
+            # Now we have the gradient for the *entire* loss. However, the optimizers
+            # *do not* share parameters and update them individually.
             if self.pre_proj > 0:
                 self.proj_opt.step()
             if self.train_backbone:
