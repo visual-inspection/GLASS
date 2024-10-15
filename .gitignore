@@ -50,7 +50,6 @@ venv.bak/
 
 # IDE profiles
 .idea/
-.vscode/
 
 # private keys
 *.pem
