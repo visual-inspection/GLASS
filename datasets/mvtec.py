@@ -92,7 +92,8 @@ class MVTecDataset(torch.utils.data.Dataset):
         self.std = std
         self.fg = fg
         self.rand_aug = rand_aug
-        self.resize = resize if self.distribution != 1 else [resize, resize]
+        self.resize = [resize, resize] # SH: I deliberately changed this to work better with non-quadratic images!
+        # self.resize = resize if self.distribution != 1 else [resize, resize]
         self.imgsize = imagesize
         self.imagesize = (3, self.imgsize, self.imgsize)
         self.classname = classname
@@ -114,7 +115,7 @@ class MVTecDataset(torch.utils.data.Dataset):
             self.class_fg = 0
 
         self.imgpaths_per_class, self.data_to_iterate = self.get_image_data()
-        self.anomaly_source_paths = sorted(1 * glob.glob(anomaly_source_path + "/*/*.jpg") +
+        self.anomaly_source_paths = sorted(1 * (glob.glob(anomaly_source_path + "/*/*.jpg") + glob.glob(anomaly_source_path + "/*/*.png")) +
                                            0 * list(next(iter(self.imgpaths_per_class.values())).values())[0])
 
         self.transform_img = [
