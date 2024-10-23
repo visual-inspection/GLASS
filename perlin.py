@@ -5,6 +5,10 @@ import math
 
 
 def generate_thr(img_shape, min=0, max=4):
+    """
+    SH: This function generates a random Perlin mask. The resulting mask has the
+    same shape as the input image and consists of ones and zeros.
+    """
     min_perlin_scale = min
     max_perlin_scale = max
     perlin_scalex = 2 ** np.random.randint(min_perlin_scale, max_perlin_scale)
@@ -19,9 +23,11 @@ def generate_thr(img_shape, min=0, max=4):
 def perlin_mask(img_shape, feat_size, min, max, mask_fg, flag=0):
     mask = np.zeros((feat_size, feat_size))
     while np.max(mask) == 0:
+        # SH: variables `perlin_thr_1` and `perlin_thr_2` are the $m_1$ and $m_2$ from the paper (Sec. 3.3).
         perlin_thr_1 = generate_thr(img_shape, min, max)
         perlin_thr_2 = generate_thr(img_shape, min, max)
         temp = torch.rand(1).numpy()[0]
+        # SH: the variable `temp` here is the $\alpha$ from the paper (Eq. 3).
         if temp > 2 / 3:
             perlin_thr = perlin_thr_1 + perlin_thr_2
             perlin_thr = np.where(perlin_thr > 0, np.ones_like(perlin_thr), np.zeros_like(perlin_thr))
@@ -29,6 +35,7 @@ def perlin_mask(img_shape, feat_size, min, max, mask_fg, flag=0):
             perlin_thr = perlin_thr_1 * perlin_thr_2
         else:
             perlin_thr = perlin_thr_1
+        
         perlin_thr = torch.from_numpy(perlin_thr)
         perlin_thr_fg = perlin_thr * mask_fg
         down_ratio_y = int(img_shape[1] / feat_size)
@@ -57,7 +64,8 @@ def rand_perlin_2d_np(shape, res, fade=lambda t: 6 * t ** 5 - 15 * t ** 4 + 10 *
 
     angles = 2 * math.pi * np.random.rand(res[0] + 1, res[1] + 1)
     gradients = np.stack((np.cos(angles), np.sin(angles)), axis=-1)
-    tt = np.repeat(np.repeat(gradients, d[0], axis=0), d[1], axis=1)
+    # SH: Not used:
+    # tt = np.repeat(np.repeat(gradients, d[0], axis=0), d[1], axis=1)
 
     tile_grads = lambda slice1, slice2: np.repeat(np.repeat(gradients[slice1[0]:slice1[1], slice2[0]:slice2[1]], d[0], axis=0), d[1],
                                                   axis=1)

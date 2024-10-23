@@ -193,6 +193,8 @@ class MVTecDataset(torch.utils.data.Dataset):
 
             beta = np.random.normal(loc=self.mean, scale=self.std)
             beta = np.clip(beta, .2, .8)
+
+            # SH: This is Eq. 4 in the paper
             aug_image = image * (1 - mask_l) + (1 - beta) * aug * mask_l + beta * image * mask_l
 
         if self.split == DatasetSplit.TEST and mask_path is not None:
