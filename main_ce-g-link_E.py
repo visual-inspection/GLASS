@@ -6,8 +6,10 @@ delivered the best results so far.
 from pathlib import Path
 from main import main
 from os import chdir, getcwd
+from typing import Literal
 
 
+MODE: Literal['ckpt', 'test'] = 'ckpt' # 'ckpt' means train (optionally continue from earlier, existing checkpoint; test evaluates)
 THIS_DIR = Path(__file__).parent.resolve()
 chdir(str(THIS_DIR))
 print(getcwd())
@@ -22,7 +24,7 @@ DTD_DIR = DATA_DIR.joinpath('./dataset_dtd/images')
 main([
                 "--gpu", "6",
                 "--seed", "0",
-                "--test", "ckpt", # "test", # 
+                "--test", MODE,
                 
                 "net",
                 "-b", "wideresnet50",
