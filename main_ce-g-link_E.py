@@ -3,13 +3,26 @@ This file is the same as "main_glink_ce_blanked.py", but version "E" which
 delivered the best results so far.
 """
 
+from pathlib import Path
 from main import main
+from os import chdir, getcwd
+
+
+THIS_DIR = Path(__file__).parent.resolve()
+chdir(str(THIS_DIR))
+print(getcwd())
+
+DATASET_NAME = "glink"
+DATA_DIR = Path(__file__).parent.joinpath('./data').resolve()
+DATASET_DIR = DATA_DIR.joinpath(f'./{DATASET_NAME}').resolve()
+# Describable Textures Dataset:
+DTD_DIR = DATA_DIR.joinpath('./dataset_dtd/images')
 
 
 main([
-                "--gpu", "3",
+                "--gpu", "6",
                 "--seed", "0",
-                "--test", "test", # "ckpt", # 
+                "--test", "ckpt", # "test", # 
                 
                 "net",
                 "-b", "wideresnet50",
@@ -41,7 +54,7 @@ main([
                 "--imagesize", "160", # 288
                 "-d", "ce_blanked",
                 
-                "glink",
-                "/home/sehoaa/GLASS-repl_a/glink",
-                "/space/sehoaa/dataset_dtd/images"
+                DATASET_NAME,
+                str(DATASET_DIR),
+                str(DTD_DIR)
             ])
